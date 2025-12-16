@@ -1,0 +1,56 @@
+service: taxdown-customer-service
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  # NOTE: Serverless Framework v3 (we're on 3.40.0) does not validate `nodejs22.x` yet.
+  # We can run CI on Node 22, but keep Lambda runtime at 20 unless you upgrade Serverless to v4.
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'prod'}
+  region: us-east-2
+  memorySize: 512
+  timeout: 29
+  environment:
+    NODE_ENV: ${env:NODE_ENV, 'development'}
+    DB_URL: ${env:DB_URL, ''}
+    DB_SCHEMA: ${env:DB_SCHEMA, 'public'}
+  httpApi:
+    cors: true
+
+functions:
+  api:
+    # Let serverless-esbuild bundle from TS source (much smaller artifacts)
+    handler: src/lambda.handler
+    events:
+      - httpApi:
+          path: /
+          method: "*"
+      - httpApi:
+          path: /{proxy+}
+          method: "*"
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    target: node20
+    platform: node
+    # Externals: Nest has optional lazy requires for these packages; we don't use them.
+    # Leaving them unresolved avoids bundling errors and is safe as long as you don't enable those features.
+    exclude:
+      - aws-sdk
+      - '@nestjs/microservices'
+      - '@nestjs/microservices/microservices-module'
+      - '@nestjs/websockets/socket-module'
+      - 'class-transformer/storage'
+    packager: pnpm
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 3002
+    noPrependStageInUrl: true

@@ -1,0 +1,54 @@
+# Cursor Rules for TaxDown Customer Service
+
+## General architecture
+
+- Follow **hexagonal architecture**:
+  - `src/customer/domain` for entities, value objects, domain services.
+  - `src/customer/application` for use cases.
+  - `src/customer/infrastructure` for controllers, repositories and integrations.
+- The **domain layer must not depend on NestJS** or any HTTP / persistence library.
+- The **application layer** should only depend on domain ports (interfaces) and domain types.
+- The **infrastructure layer** is allowed to depend on NestJS, database libraries, and external services.
+
+## TypeScript & code style
+
+- Use **strict TypeScript**, avoid `any`.
+- Prefer **interfaces** for ports (`CustomerRepositoryPort`, etc.).
+- Use DTOs for all controller inputs/outputs, with `class-validator` where appropriate.
+- Keep controllers thin: they should delegate to use cases, not implement business logic.
+
+## Logging
+
+- Use **Pino** (via `nestjs-pino`) for logging.
+- Use structured logs including:
+  - context (module / use case name),
+  - relevant identifiers (customerId, requestId when available).
+- Avoid `console.log`; always use the injected logger.
+
+## Testing
+
+- For each non-trivial domain or use case:
+  - Add **unit tests** in `*.spec.ts`.
+- Prefer:
+  - domain tests (entities, value objects, domain services),
+  - application tests (use cases) with repositories mocked by ports.
+- For HTTP layer, add at least a few **e2e tests** using Nest testing utilities and Supertest.
+
+## API design
+
+- Use RESTful conventions:
+  - e.g. `/customers`, `/customers/:id`, `/customers/:id/available-credit`.
+- Use consistent HTTP status codes:
+  - 200/201 for success,
+  - 400 for validation errors,
+  - 404 for not found,
+  - 409 for conflicts,
+  - 500 only for unexpected errors.
+- Document all public endpoints with Swagger decorators.
+
+## Serverless & database
+
+- This NestJS app will later run as a **single AWS Lambda** behind **API Gateway**.
+- All modules and controllers must be stateless.
+- All configuration should come from environment variables (`DB_URL`, `DB_SCHEMA`, etc.).
+- Database access must go through repository adapters that can be swapped in case we move to a different persistence backend (e.g. DynamoDB).
