@@ -48,7 +48,8 @@ custom:
       - '@nestjs/microservices'
       - '@nestjs/microservices/microservices-module'
       - '@nestjs/websockets/socket-module'
-      - 'class-transformer/storage'
+    # Map legacy import used by @nestjs/mapped-types/@nestjs/swagger to a real file in class-transformer.
+    plugins: esbuild.plugins.js
     packager: pnpm
   serverless-offline:
     httpPort: 3000

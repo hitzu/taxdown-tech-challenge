@@ -162,7 +162,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/taxdown-customer-service/prod/1765928360777-2025-12-16T23:39:20.777Z/taxdown-customer-service.zip"
+          "S3Key": "serverless/taxdown-customer-service/prod/1765928932175-2025-12-16T23:48:52.175Z/taxdown-customer-service.zip"
         },
         "Handler": "src/lambda.handler",
         "Runtime": "nodejs20.x",
@@ -187,14 +187,14 @@
         "ApiLogGroup"
       ]
     },
-    "ApiLambdaVersionGwO2uQVrH2EiZCEfesR3X0dcmjPuOyTkWkTF7QhTs": {
+    "ApiLambdaVersionCcX7iwsRIXVXtrT2m8yXchtOfbLv4vCtUxMsRsVVo3Y": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ApiLambdaFunction"
         },
-        "CodeSha256": "ucHXS0Wrf0JLYJWsDHJWYWt7ASUBSxdgoQrUA4ZFULo="
+        "CodeSha256": "/eC99oqEKkhcZdiwHe6LG1ekZxGir6HYMyc+xYJhUdw="
       }
     },
     "HttpApi": {
@@ -349,7 +349,7 @@
     "ApiLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ApiLambdaVersionGwO2uQVrH2EiZCEfesR3X0dcmjPuOyTkWkTF7QhTs"
+        "Ref": "ApiLambdaVersionCcX7iwsRIXVXtrT2m8yXchtOfbLv4vCtUxMsRsVVo3Y"
       },
       "Export": {
         "Name": "sls-taxdown-customer-service-prod-ApiLambdaFunctionQualifiedArn"
