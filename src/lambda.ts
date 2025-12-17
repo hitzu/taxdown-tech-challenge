@@ -9,11 +9,11 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { Logger } from "nestjs-pino";
+// import { Logger } from "nestjs-pino";
 import type { Callback, Context, Handler } from "aws-lambda";
 
 import { AppModule } from "./app.module";
-import { setupSwagger } from "./shared/swagger";
+// import { setupSwagger } from "./shared/swagger";
 
 @Catch()
 class GlobalExceptionFilter implements ExceptionFilter {
@@ -117,8 +117,8 @@ async function bootstrapServer(): Promise<Handler> {
 
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-    const logger = app.get(Logger);
-    app.useLogger(logger);
+    // const logger = app.get(Logger);
+    // app.useLogger(logger);
 
     app.setGlobalPrefix("api");
 
@@ -131,7 +131,7 @@ async function bootstrapServer(): Promise<Handler> {
     );
 
     app.useGlobalFilters(new GlobalExceptionFilter());
-    setupSwagger(app);
+    // setupSwagger(app);
     await app.init();
 
     const expressApp = app.getHttpAdapter().getInstance();

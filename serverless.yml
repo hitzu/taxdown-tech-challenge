@@ -10,7 +10,7 @@ provider:
   memorySize: 512
   timeout: 29
   environment:
-    NODE_ENV: ${env:NODE_ENV, 'development'}
+    NODE_ENV: ${env:NODE_ENV, 'local'}
     DB_URL: ${env:DB_URL, ''}
     DB_SCHEMA: ${env:DB_SCHEMA, 'public'}
   httpApi:
@@ -31,8 +31,11 @@ functions:
 plugins:
   - serverless-esbuild
   - serverless-offline
+  - serverless-dotenv-plugin
 
 custom:
+  dotenv:
+    file: env.local
   esbuild:
     bundle: true
     minify: true
