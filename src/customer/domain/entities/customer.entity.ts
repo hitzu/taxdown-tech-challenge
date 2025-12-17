@@ -27,10 +27,8 @@ export class Customer {
   }): Customer {
     const credit = params.initialCredit ?? AvailableCredit.from(0);
 
-    const tempId = CustomerId.from(1);
-
     return new Customer(
-      tempId,
+      null as any,
       params.name,
       params.email,
       params.phoneNumber,
@@ -121,7 +119,7 @@ export class Customer {
     return this._updatedAt;
   }
 
-  get deletedAt(): Date | undefined {
-    return this._deletedAt;
+  get deletedAt(): Date | null {
+    return this._deletedAt ?? null;
   }
 }
