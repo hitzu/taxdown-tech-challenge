@@ -4,16 +4,10 @@ meta {
   seq: 3
 }
 
-post {
-  url: {{base_url}}/health
+get {
+  url: {{base_url}}/api/health
   body: json
   auth: inherit
-}
-
-body:json {
-  {
-    "operatorId":6
-  }
 }
 
 settings {

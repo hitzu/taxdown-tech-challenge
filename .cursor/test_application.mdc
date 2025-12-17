@@ -1,0 +1,106 @@
+---
+description: Defines a test plan before implementing tests.
+globs:
+  - src/**/application/tests/**/*.spec.ts
+  - src/**/application/**/tests/**/*.spec.ts
+alwaysApply: false
+---
+
+# Expert Test Builder Rules
+
+I want you to become my Expert Test Builder. Your goal is to help me craft rigorous and effective **unit test plans and unit test implementations for application-layer use cases** (e.g. `CreateCustomerUseCase` in `src/**/application/use-cases/**`). These tests must be production-grade, follow industry-standard testing patterns, and apply proven unit testing techniques, such as:
+
+- Equivalence Partitioning
+- Boundary Value Analysis
+- Negative Testing
+- Happy Path and Edge Case Testing
+- Parameterized Testing
+- State-Based and Interaction-Based Testing
+- Exception and Error Handling
+
+We follow the **AAA (Arrange-Act-Assert)** testing technique. All test plans and implementations must reflect this structure clearly.
+
+## Pre-Test Analysis Process
+
+Before writing any test logic:
+
+1. **Identify the SUT (System Under Test)**:
+   - The use case class (e.g. `CreateCustomerUseCase`) and its public method (usually `execute`).
+
+2. **Identify dependencies (ports) and boundaries**:
+   - List every injected dependency (e.g. repositories, gateways, event buses, clocks, id generators).
+   - For each dependency, decide the test double type:
+     - **Stub/Fake** when you need behavior/state (e.g. in-memory repository).
+     - **Spy/Mock** when you need interaction assertions (e.g. `save` called once with expected shape).
+   - Keep the test a **unit**: no DB, no HTTP, no TypeORM, no Nest DI container.
+
+3. **Map domain validation to test cases**:
+   - Identify which **domain value objects/entities** are constructed by the use case and what they validate.
+   - Plan negative tests around those validations (invalid email/phone, negative credit, empty name, etc.).
+   - Assert **specific error types/codes when available** (e.g. `DomainError` subclasses), but don’t overfit to error messages.
+
+4. **Test data strategy (application-unit)**:
+   - Prefer **input DTO builders** (simple functions) for use-case inputs.
+   - Prefer **port fakes** for persistence (e.g. in-memory repo that assigns ids like a DB would).
+   - Only use `@jorgebodega/typeorm-factory` in **integration tests** (`*.int.spec.ts`) that boot a real `DataSource`. Do not use it in use-case unit tests.
+
+5. **Assertions should match the use-case contract**:
+   - Primary: output DTO fields and invariants.
+   - Secondary: port interactions (call count, arguments, error propagation).
+   - Avoid asserting internal domain object structure unless it’s part of the contract.
+
+## Use-case Checklist (example: `CreateCustomerUseCase`)
+
+- **VO validation surfaced through the use case**:
+  - `Email.from(...)` → assert `CustomerEmailInvalidError` (and optionally `.code === "CUSTOMER_EMAIL_INVALID"`).
+  - `PhoneNumber.from(...)` → assert `CustomerPhoneNumberInvalidError` (and optionally `.code === "CUSTOMER_PHONE_NUMBER_INVALID"`).
+  - `AvailableCredit.from(...)` → assert `CustomerAvailableCreditNegativeError` (and optionally `.code === "CUSTOMER_AVAILABLE_CREDIT_NEGATIVE"`).
+  - `Customer.createNew({ name })` → current implementation throws a generic `Error` for empty/whitespace name (assert the class/message you actually get).
+- **Defaulting behavior**:
+  - `initialAvailableCredit` omitted → use case should default to `0` (`input.initialAvailableCredit ?? 0`).
+- **Time fields**:
+  - Avoid brittle equality on `createdAt/updatedAt`; prefer `expect.any(Date)` or freeze time via `jest.useFakeTimers()` + `jest.setSystemTime(...)`.
+- **Output mapping**:
+  - Ensure `deletedAt` is returned and is `null` for a newly-created customer (unless the repo fake returns otherwise).
+
+## Test Plan Template
+
+### Test Plan:
+
+{Provide an AAA-structured test plan focused on the use case}
+
+- **Arrange**
+  - Build the input DTO (prefer a builder with sensible defaults).
+  - Build test doubles for ports:
+    - Fake repo state/behavior (including id assignment if the domain creates entities with `null as any` id).
+    - Optional spy wrapper to capture calls.
+- **Act**
+  - Call `await useCase.execute(input)`.
+- **Assert**
+  - Validate returned output DTO (types, mapped values, defaults like `initialAvailableCredit ?? 0`).
+  - Validate port interactions:
+    - Expected methods called (e.g. `save` exactly once).
+    - Argument shape (e.g. customer fields derived from input; allow time fields with matchers).
+  - Validate negative/error cases:
+    - Domain VO validation errors (invalid email/phone, negative credit).
+    - Entity invariants (e.g. empty/whitespace name).
+    - Dependency failures (repo throws → use case rejects with the same error).
+
+{Justify which techniques are used and why (equivalence partitions + boundary values + interaction assertions)}
+
+### Critique:
+
+{Critically assess the depth, edge case coverage, and assumptions of the test plan}
+
+### Doubles / Factory Analysis (if applicable):
+
+{If an in-memory repo or mock is used, critique it: correctness, determinism, id assignment, sorting, and whether it’s leaking persistence concerns}
+{If an ORM factory exists, ensure it’s used only in integration tests; suggest using DTO builders + fakes for unit tests}
+
+### Questions:
+
+{Ask up to 3 clarification questions if needed}
+
+---
+
+**Important!** Only start the test implementation once the user has agreed to start.

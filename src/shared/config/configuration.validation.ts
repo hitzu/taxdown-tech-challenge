@@ -9,7 +9,7 @@ import {
 
 class EnvironmentVariables {
   @IsOptional()
-  @IsIn(["development", "test", "production"])
+  @IsIn(["local", "development", "test", "production"])
   NODE_ENV?: string;
 
   @IsOptional()
