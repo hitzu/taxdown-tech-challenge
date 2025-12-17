@@ -13,6 +13,7 @@ import { Logger } from "nestjs-pino";
 import type { Callback, Context, Handler } from "aws-lambda";
 
 import { AppModule } from "./app.module";
+import { setupSwagger } from "./shared/swagger";
 
 @Catch()
 class GlobalExceptionFilter implements ExceptionFilter {
@@ -115,14 +116,11 @@ async function bootstrapServer(): Promise<Handler> {
     });
 
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
-    console.log("[BOOTSTRAP] App created successfully");
 
     const logger = app.get(Logger);
     app.useLogger(logger);
-    console.log("[BOOTSTRAP] Logger configured");
 
     app.setGlobalPrefix("api");
-    console.log('[BOOTSTRAP] Global prefix set to "api"');
 
     app.useGlobalPipes(
       new ValidationPipe({
@@ -131,13 +129,10 @@ async function bootstrapServer(): Promise<Handler> {
         forbidUnknownValues: false,
       })
     );
-    console.log("[BOOTSTRAP] Validation pipes configured");
 
     app.useGlobalFilters(new GlobalExceptionFilter());
-    console.log("[BOOTSTRAP] Global exception filter configured");
-
+    setupSwagger(app);
     await app.init();
-    console.log("[BOOTSTRAP] App initialized");
 
     const expressApp = app.getHttpAdapter().getInstance();
     const serverlessHandler = serverlessExpress({ app: expressApp });

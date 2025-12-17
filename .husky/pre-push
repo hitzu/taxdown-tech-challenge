@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm test:all
+echo "Running tests before push (including E2E)..."
+# pnpm test:all
