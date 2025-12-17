@@ -1,0 +1,34 @@
+## Domain Testing Rules (TaxDown Customer Service)
+
+These rules apply to **unit tests for the domain layer**: value objects, entities, and domain errors under `src/**/domain/**`.
+
+### Location & Naming
+
+- **Location**: `src/<bounded-context>/domain/tests/*.spec.ts`
+- **File name**: `<artifact>.spec.ts` (e.g. `email.vo.spec.ts`, `customer.entity.spec.ts`)
+- **Runner**: Jest + ts-jest (do **not** depend on NestJS in domain tests).
+
+### Principles
+
+- **Deterministic**: no IO, no network, no DB, and no real-time dependencies unless strictly necessary.
+- **AAA** (Arrange–Act–Assert): each test should clearly show what it sets up, what it executes, and what it verifies.
+- **One behavior per test**: avoid mixing unrelated invariants in the same test.
+
+### Error Assertions (very important)
+
+- When the domain defines its own errors (`DomainError` and subclasses), **assert the concrete error class**:
+  - `expect(() => X).toThrow(MyDomainError)`
+- If the error message is stable, you can also assert the `message`.
+- To assert `code`, Jest’s `toThrow` is not enough; use `try/catch`:
+
+```ts
+try {
+  Email.from("bad");
+  throw new Error("Expected to throw");
+} catch (err) {
+  expect(err).toBeInstanceOf(CustomerEmailInvalidError);
+  expect((err as CustomerEmailInvalidError).code).toBe(
+    "CUSTOMER_EMAIL_INVALID"
+  );
+}
+```
