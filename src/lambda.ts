@@ -9,11 +9,9 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-// import { Logger } from "nestjs-pino";
 import type { Callback, Context, Handler } from "aws-lambda";
 
 import { AppModule } from "./app.module";
-// import { setupSwagger } from "./shared/swagger";
 
 @Catch()
 class GlobalExceptionFilter implements ExceptionFilter {
@@ -112,7 +110,6 @@ async function bootstrapServer(): Promise<Handler> {
       NODE_ENV: process.env.NODE_ENV,
       DB_URL: process.env.DB_URL ? "SET" : "NOT SET",
       DB_SCHEMA: process.env.DB_SCHEMA,
-      PORT: process.env.PORT,
     });
 
     const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -131,7 +128,6 @@ async function bootstrapServer(): Promise<Handler> {
     );
 
     app.useGlobalFilters(new GlobalExceptionFilter());
-    // setupSwagger(app);
     await app.init();
 
     const expressApp = app.getHttpAdapter().getInstance();
