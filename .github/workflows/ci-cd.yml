@@ -65,9 +65,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # With serverless-esbuild we bundle from TS source for deployment.
-      # No Nest build needed here; keep build in CI job if you want.
-
       # - name: migrations:status (before)
       #   env:
       #     NODE_ENV: production
