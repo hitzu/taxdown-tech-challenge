@@ -72,21 +72,34 @@ jobs:
 
       - name: migrations:status (before)
         env:
-          NODE_ENV: production
+          NODE_ENV: main
           DB_URL: ${{ secrets.DB_URL }}
           DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
-        run: pnpm run db:status
+        run: |
+          set -euo pipefail
+
+          echo "NODE_ENV=${NODE_ENV-}"
+          echo "DB_SCHEMA=${DB_SCHEMA-}"
+
+          DB_URL_VALUE="${DB_URL-}"
+          if [ -n "$DB_URL_VALUE" ]; then
+            echo "DB_URL=$DB_URL_VALUE"
+          else
+            echo "DB_URL is empty"
+          fi
+
+          pnpm run db:status
 
       - name: migrations:run
         env:
-          NODE_ENV: production
+          NODE_ENV: main
           DB_URL: ${{ secrets.DB_URL }}
           DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
         run: pnpm run db:run
 
       - name: migrations:status (after)
         env:
-          NODE_ENV: production
+          NODE_ENV: main
           DB_URL: ${{ secrets.DB_URL }}
           DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
         run: pnpm run db:status
