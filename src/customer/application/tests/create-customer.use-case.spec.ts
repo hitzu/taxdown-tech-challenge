@@ -13,10 +13,25 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
     return this.store.find((c) => c.id.getValue() === id.getValue()) ?? null;
   }
 
-  async findAll(): Promise<Customer[]> {
-    return [...this.store].sort(
-      (a, b) => b.availableCredit.getValue() - a.availableCredit.getValue()
-    );
+  async findAll(query: {
+    sortBy: "availableCredit" | "name" | "createdAt";
+    sortOrder: "asc" | "desc";
+    page: number;
+    pageSize: number;
+  }): Promise<{ customers: Customer[]; total: number }> {
+    const { sortBy, sortOrder, page, pageSize } = query;
+    const sorted = [...this.store].sort((a, b) => {
+      if (sortBy === "availableCredit") {
+        return sortOrder === "asc"
+          ? a.availableCredit.getValue() - b.availableCredit.getValue()
+          : b.availableCredit.getValue() - a.availableCredit.getValue();
+      }
+      return 0;
+    });
+    return {
+      customers: sorted.slice((page - 1) * pageSize, page * pageSize),
+      total: sorted.length,
+    };
   }
 
   async findByEmailAndPhoneNumber(
@@ -67,7 +82,7 @@ describe("CreateCustomerUseCase", () => {
       name: "John Doe",
       email: "john@example.com",
       phoneNumber: "+34600123456",
-      initialAvailableCredit: 100,
+      availableCredit: 100,
     });
 
     expect(output.id).toBeGreaterThan(0);
@@ -88,7 +103,7 @@ describe("CreateCustomerUseCase", () => {
         name: "John Doe",
         email: "not-an-email",
         phoneNumber: "+34600123456",
-        initialAvailableCredit: 0,
+        availableCredit: 0,
       })
     ).rejects.toThrow();
   });
@@ -101,7 +116,7 @@ describe("CreateCustomerUseCase", () => {
       name: "Jane Doe",
       email: "jane@example.com",
       phoneNumber: "+34600111111",
-      initialAvailableCredit: 25,
+      availableCredit: 25,
     });
 
     await expect(
@@ -109,7 +124,7 @@ describe("CreateCustomerUseCase", () => {
         name: "Duplicate Jane",
         email: "jane@example.com",
         phoneNumber: "+34600111111",
-        initialAvailableCredit: 10,
+        availableCredit: 10,
       })
     ).rejects.toBeInstanceOf(CustomerAlreadyExistsEmailPhoneNumberError);
   });

@@ -16,9 +16,7 @@ export class CreateCustomerUseCase {
   ): Promise<CreateCustomerOutputDto> {
     const email = Email.from(input.email);
     const phoneNumber = PhoneNumber.from(input.phoneNumber);
-    const availableCredit = AvailableCredit.from(
-      input.initialAvailableCredit ?? 0
-    );
+    const availableCredit = AvailableCredit.from(input.availableCredit ?? 0);
 
     const existing = await this.customerRepository.findByEmailAndPhoneNumber(
       email,

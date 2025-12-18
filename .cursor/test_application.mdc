@@ -25,9 +25,11 @@ We follow the **AAA (Arrange-Act-Assert)** testing technique. All test plans and
 Before writing any test logic:
 
 1. **Identify the SUT (System Under Test)**:
+
    - The use case class (e.g. `CreateCustomerUseCase`) and its public method (usually `execute`).
 
 2. **Identify dependencies (ports) and boundaries**:
+
    - List every injected dependency (e.g. repositories, gateways, event buses, clocks, id generators).
    - For each dependency, decide the test double type:
      - **Stub/Fake** when you need behavior/state (e.g. in-memory repository).
@@ -35,11 +37,13 @@ Before writing any test logic:
    - Keep the test a **unit**: no DB, no HTTP, no TypeORM, no Nest DI container.
 
 3. **Map domain validation to test cases**:
+
    - Identify which **domain value objects/entities** are constructed by the use case and what they validate.
    - Plan negative tests around those validations (invalid email/phone, negative credit, empty name, etc.).
    - Assert **specific error types/codes when available** (e.g. `DomainError` subclasses), but don’t overfit to error messages.
 
 4. **Test data strategy (application-unit)**:
+
    - Prefer **input DTO builders** (simple functions) for use-case inputs.
    - Prefer **port fakes** for persistence (e.g. in-memory repo that assigns ids like a DB would).
    - Only use `@jorgebodega/typeorm-factory` in **integration tests** (`*.int.spec.ts`) that boot a real `DataSource`. Do not use it in use-case unit tests.
@@ -57,7 +61,7 @@ Before writing any test logic:
   - `AvailableCredit.from(...)` → assert `CustomerAvailableCreditNegativeError` (and optionally `.code === "CUSTOMER_AVAILABLE_CREDIT_NEGATIVE"`).
   - `Customer.createNew({ name })` → current implementation throws a generic `Error` for empty/whitespace name (assert the class/message you actually get).
 - **Defaulting behavior**:
-  - `initialAvailableCredit` omitted → use case should default to `0` (`input.initialAvailableCredit ?? 0`).
+  - `availableCredit` omitted → use case should default to `0` (`input.availableCredit ?? 0`).
 - **Time fields**:
   - Avoid brittle equality on `createdAt/updatedAt`; prefer `expect.any(Date)` or freeze time via `jest.useFakeTimers()` + `jest.setSystemTime(...)`.
 - **Output mapping**:
@@ -77,7 +81,7 @@ Before writing any test logic:
 - **Act**
   - Call `await useCase.execute(input)`.
 - **Assert**
-  - Validate returned output DTO (types, mapped values, defaults like `initialAvailableCredit ?? 0`).
+  - Validate returned output DTO (types, mapped values, defaults like `availableCredit ?? 0`).
   - Validate port interactions:
     - Expected methods called (e.g. `save` exactly once).
     - Argument shape (e.g. customer fields derived from input; allow time fields with matchers).

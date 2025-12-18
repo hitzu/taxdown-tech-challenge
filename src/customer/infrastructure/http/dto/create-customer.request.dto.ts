@@ -44,5 +44,5 @@ export class CreateCustomerRequestDto {
   @IsNumber()
   @IsNotEmpty()
   @IsPositive()
-  initialAvailableCredit!: number;
+  availableCredit!: number;
 }

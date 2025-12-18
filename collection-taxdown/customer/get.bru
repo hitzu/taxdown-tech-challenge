@@ -1,22 +1,13 @@
 meta {
   name: get
   type: http
-  seq: 2
+  seq: 3
 }
 
 get {
-  url: {{base_url}}/api/customers/10
+  url: {{base_url}}/api/customers/1
   body: json
   auth: inherit
-}
-
-body:json {
-  {
-    "name": "hola",
-    "email": "hola@gmcio.com",
-    "phoneNumber": "+512221101495",
-    "initialAvailableCredit": 100
-  }
 }
 
 settings {

@@ -16,10 +16,25 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
     return this.store.find((c) => c.id.getValue() === id.getValue()) ?? null;
   }
 
-  async findAll(): Promise<Customer[]> {
-    return [...this.store].sort(
-      (a, b) => b.availableCredit.getValue() - a.availableCredit.getValue()
-    );
+  async findAll(query: {
+    sortBy: "availableCredit" | "name" | "createdAt";
+    sortOrder: "asc" | "desc";
+    page: number;
+    pageSize: number;
+  }): Promise<{ customers: Customer[]; total: number }> {
+    const { sortBy, sortOrder, page, pageSize } = query;
+    const sorted = [...this.store].sort((a, b) => {
+      if (sortBy === "availableCredit") {
+        return sortOrder === "asc"
+          ? a.availableCredit.getValue() - b.availableCredit.getValue()
+          : b.availableCredit.getValue() - a.availableCredit.getValue();
+      }
+      return 0;
+    });
+    return {
+      customers: sorted.slice((page - 1) * pageSize, page * pageSize),
+      total: sorted.length,
+    };
   }
 
   async save(customer: Customer): Promise<Customer> {
