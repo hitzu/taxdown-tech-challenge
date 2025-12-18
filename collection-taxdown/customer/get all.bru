@@ -5,14 +5,14 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/customers
+  url: {{base_url}}/api/customers?sortBy=availableCredit&sortOrder=desc
   body: none
   auth: inherit
 }
 
 params:query {
-  ~sortBy: availableCredit
-  ~sortOrder: desc
+  sortBy: availableCredit
+  sortOrder: desc
   ~page: adadasd
   ~pageSize: qweqwe
 }

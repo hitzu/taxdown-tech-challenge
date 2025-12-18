@@ -208,7 +208,7 @@ describe("UpdateCustomerUseCase", () => {
     // Act + Assert
     await expect(
       useCase.execute(1, buildUpdateInput({ name: "   " }))
-    ).rejects.toThrow("Name cannot be empty");
+    ).rejects.toThrow("Customer name cannot be empty");
     expect(repo.updateCalls).toHaveLength(1);
   });
 });

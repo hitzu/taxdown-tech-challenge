@@ -35,7 +35,7 @@ plugins:
 
 custom:
   dotenv:
-    file: env.local
+    file: .env.local
   esbuild:
     bundle: true
     minify: true

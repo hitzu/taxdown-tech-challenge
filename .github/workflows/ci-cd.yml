@@ -81,14 +81,14 @@ jobs:
         env:
           NODE_ENV: production
           DB_URL: ${{ secrets.DB_URL }}
-          DB_SCHEMA: ${{ vars.DB_SCHEMA }}
+          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
         run: pnpm run db:run
 
       - name: migrations:status (after)
         env:
           NODE_ENV: production
           DB_URL: ${{ secrets.DB_URL }}
-          DB_SCHEMA: ${{ vars.DB_SCHEMA }}
+          DB_SCHEMA: ${{ secrets.DB_SCHEMA }}
         run: pnpm run db:status
 
       - name: Configure AWS credentials

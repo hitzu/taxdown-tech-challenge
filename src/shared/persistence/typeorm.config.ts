@@ -7,7 +7,7 @@ export const getTypeOrmConfig = (): TypeOrmModuleOptions => {
   const isProd = nodeEnv === "prod" || nodeEnv === "production";
 
   dotenv.config({
-    path: path.resolve(__dirname, `../../.env.${nodeEnv}`),
+    path: path.resolve(process.cwd(), `.env.${nodeEnv}`),
   });
 
   const dbUrl = process.env.DB_URL ?? "";
