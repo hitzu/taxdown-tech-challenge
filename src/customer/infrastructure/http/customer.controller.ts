@@ -10,6 +10,7 @@ import {
   NotFoundException,
   ConflictException,
   Query,
+  Delete,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -24,6 +25,7 @@ import {
 import { CreateCustomerUseCase } from "../../application/use-cases/create-customer.use-case";
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
+import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
 
 import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
 import {
@@ -31,8 +33,11 @@ import {
   FindAllCustomerRequestDto,
   FindAllCustomerResponseDto,
 } from "./dto";
-import { CustomerNotFoundError } from "../errors";
-import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
+import { CustomerNotFoundError as HttpCustomerNotFoundError } from "../errors";
+import {
+  CustomerAlreadyExistsEmailPhoneNumberError,
+  CustomerNotFoundError as DomainCustomerNotFoundError,
+} from "../../domain/errors";
 import { ParseFindAllCustomersQueryPipe } from "./pipes/parse-find-all-customers-query.pipe";
 
 @ApiTags("Customers")
@@ -44,7 +49,9 @@ export class CustomerController {
     @Inject(FindCustomerByIdUseCase)
     private readonly findCustomerByIdUseCase: FindCustomerByIdUseCase,
     @Inject(FindAllCustomerUseCase)
-    private readonly findAllCustomersUseCase: FindAllCustomerUseCase
+    private readonly findAllCustomersUseCase: FindAllCustomerUseCase,
+    @Inject(DeleteCustomerUseCase)
+    private readonly deleteCustomerUseCase: DeleteCustomerUseCase
   ) {}
 
   @Post()
@@ -82,7 +89,7 @@ export class CustomerController {
     );
 
     if (!customerFound) {
-      const error = new CustomerNotFoundError(Number(id));
+      const error = new HttpCustomerNotFoundError(Number(id));
       throw new NotFoundException({ message: error.message, code: error.code });
     }
 
@@ -114,5 +121,22 @@ export class CustomerController {
       page,
       pageSize,
     });
+  }
+
+  @Delete("/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: "id", description: "The id of the customer", example: "1" })
+  async deleteCustomer(@Param("id") id: string) {
+    try {
+      await this.deleteCustomerUseCase.execute(Number(id));
+    } catch (error) {
+      if (error instanceof DomainCustomerNotFoundError) {
+        throw new NotFoundException({
+          message: error.message,
+          code: error.code,
+        });
+      }
+      throw error;
+    }
   }
 }

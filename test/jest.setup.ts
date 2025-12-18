@@ -47,47 +47,36 @@ afterAll(async () => {
 });
 
 afterEach(async () => {
-  // Only run cleanup if DataSource is initialized
-  if (!TestDataSource.isInitialized) {
-    return;
-  }
+  if (!TestDataSource.isInitialized) return;
 
   const queryRunner = TestDataSource.createQueryRunner();
 
   try {
-    // Disable triggers to avoid foreign key constraint issues
-    await queryRunner.query("SET session_replication_role = replica;");
-
-    const entities = TestDataSource.entityMetadatas;
-    for (const entity of entities) {
-      const tableName = entity.tableName;
-
-      try {
-        // Delete from all tables
-        await queryRunner.query(
-          `TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE;`
-        );
-      } catch (error) {
-        // Ignore errors if table was already deleted or doesn't exist
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        if (
-          !errorMessage.includes("does not exist") &&
-          !errorMessage.includes("deadlock")
-        ) {
-          // Only log non-expected errors
-          console.error(`Error deleting from ${tableName}:`, errorMessage);
-        }
-      }
+    try {
+      await queryRunner.query("SET session_replication_role = replica;");
+    } catch {
+      // ignore
     }
 
-    // Re-enable triggers
-    await queryRunner.query("SET session_replication_role = DEFAULT;");
-  } catch (error) {
-    // Ignore errors if connection is not available
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (!errorMessage.includes("not Connected")) {
-      console.error("Error in afterEach cleanup:", errorMessage);
+    const entities = TestDataSource.entityMetadatas;
+
+    for (const entity of entities) {
+      const tableName = entity.tableName;
+      const schema = (entity as any).schema as string | undefined;
+
+      const qualified = schema
+        ? `"${schema}"."${tableName}"`
+        : `"${tableName}"`;
+
+      await queryRunner.query(
+        `TRUNCATE TABLE ${qualified} RESTART IDENTITY CASCADE;`
+      );
+    }
+
+    try {
+      await queryRunner.query("SET session_replication_role = DEFAULT;");
+    } catch {
+      // ignore
     }
   } finally {
     await queryRunner.release();

@@ -8,6 +8,7 @@ import { CreateCustomerUseCase } from "../../application/use-cases/create-custom
 import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
+import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerOrmEntity])],
@@ -33,6 +34,12 @@ import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-cus
       provide: FindAllCustomerUseCase,
       useFactory: (customerRepository: CustomerRepositoryPort) =>
         new FindAllCustomerUseCase(customerRepository),
+      inject: [CUSTOMER_REPOSITORY_TOKEN],
+    },
+    {
+      provide: DeleteCustomerUseCase,
+      useFactory: (customerRepository: CustomerRepositoryPort) =>
+        new DeleteCustomerUseCase(customerRepository),
       inject: [CUSTOMER_REPOSITORY_TOKEN],
     },
   ],

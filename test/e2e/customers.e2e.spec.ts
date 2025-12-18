@@ -226,6 +226,53 @@ describe("Customers E2E", () => {
     ]);
   });
 
+  it("DELETE /api/customers/:id should soft delete a customer", async () => {
+    const created = await factory.create({
+      name: "Delete Me",
+      email: "delete.me@example.com",
+      phoneNumber: "+34600119999",
+      availableCredit: 123,
+    });
+
+    const res = await request(app.getHttpServer())
+      .delete(`/api/customers/${created.id}`)
+      .expect(204);
+
+    // Controller returns void on success
+    expect(res.text).toBe("");
+    expect(res.body).toEqual({});
+
+    // Soft delete should set deletedAt in DB
+    const repo = TestDataSource.getRepository(CustomerOrmEntity);
+    const persisted = await repo.findOne({
+      where: { id: created.id },
+      withDeleted: true,
+    });
+
+    expect(persisted).toBeTruthy();
+    expect(persisted!.deletedAt).toBeInstanceOf(Date);
+
+    // Deleted customers should not be fetchable via API
+    const getRes = await request(app.getHttpServer())
+      .get(`/api/customers/${created.id}`)
+      .expect(404);
+    expect(getRes.body).toMatchObject({
+      code: "CUSTOMER_NOT_FOUND",
+      message: expect.any(String),
+    });
+  });
+
+  it("DELETE /api/customers/:id should return 404 when customer does not exist", async () => {
+    const res = await request(app.getHttpServer())
+      .delete("/api/customers/99999999")
+      .expect(404);
+
+    expect(res.body).toMatchObject({
+      code: "CUSTOMER_NOT_FOUND",
+      message: expect.any(String),
+    });
+  });
+
   afterAll(async () => {
     await app.close();
   });
