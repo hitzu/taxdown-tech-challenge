@@ -14,11 +14,24 @@ export class CustomerFactory extends Factory<CustomerOrmEntity> {
     this.dataSource = dataSource;
   }
 
+  /**
+   * PhoneNumber VO expects E.164 (digits only, optional leading '+').
+   * Faker "international" formats can include spaces, parentheses, etc.
+   */
+  private e164PhoneNumber(
+    countryCode = "34",
+    nationalNumberLength = 9
+  ): string {
+    const digits = faker.string.numeric(nationalNumberLength);
+    const normalizedDigits = digits[0] === "0" ? `1${digits.slice(1)}` : digits;
+    return `+${countryCode}${normalizedDigits}`;
+  }
+
   protected attrs(): FactorizedAttrs<CustomerOrmEntity> {
     return {
       name: faker.person.fullName(),
       email: faker.internet.email(),
-      phoneNumber: faker.phone.number({ style: "international" }) as string,
+      phoneNumber: this.e164PhoneNumber(),
       availableCredit: faker.number.int({ min: 0, max: 1000 }),
     };
   }

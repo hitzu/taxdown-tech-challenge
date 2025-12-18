@@ -1,0 +1,22 @@
+meta {
+  name: update available credit
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{base_url}}/api/customers/2/available-credit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "availableCredit": 400
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

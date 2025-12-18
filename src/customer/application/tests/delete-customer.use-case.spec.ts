@@ -1,65 +1,15 @@
 import { DeleteCustomerUseCase } from "../use-cases/delete-customer.use-case";
-import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
-import { Customer } from "../../domain/entities/customer.entity";
-import {
-  AvailableCredit,
-  CustomerId,
-  Email,
-  PhoneNumber,
-} from "../../domain/value-objects";
+import { CustomerId } from "../../domain/value-objects";
 import {
   CustomerIdPositiveError,
   CustomerNotFoundError,
 } from "../../domain/errors";
+import { InMemoryCustomerRepository } from "../../../../test/utils/in-memory-customer-repository";
+import { Customer } from "../../domain/entities/customer.entity";
+import { Email, PhoneNumber } from "../../domain/value-objects";
+import { AvailableCredit } from "../../domain/value-objects";
 
-class InMemoryCustomerRepository implements CustomerRepositoryPort {
-  private store: Customer[] = [];
-
-  public findByIdCalls: CustomerId[] = [];
-  public deleteCalls: CustomerId[] = [];
-
-  public failFindByIdWith: Error | null = null;
-  public failDeleteWith: Error | null = null;
-
-  async save(customer: Customer): Promise<Customer> {
-    this.store.push(customer);
-    return customer;
-  }
-
-  async findById(id: CustomerId): Promise<Customer | null> {
-    this.findByIdCalls.push(id);
-    if (this.failFindByIdWith) {
-      throw this.failFindByIdWith;
-    }
-    return this.store.find((c) => c.id.getValue() === id.getValue()) ?? null;
-  }
-
-  async findAll(): Promise<{ customers: Customer[]; total: number }> {
-    return { customers: [...this.store], total: this.store.length };
-  }
-
-  async delete(id: CustomerId): Promise<void> {
-    this.deleteCalls.push(id);
-    if (this.failDeleteWith) {
-      throw this.failDeleteWith;
-    }
-    this.store = this.store.filter((c) => c.id.getValue() !== id.getValue());
-  }
-
-  async findByEmailAndPhoneNumber(): Promise<Customer | null> {
-    return null;
-  }
-
-  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
-    const customerFound = await this.findById(id);
-    if (!customerFound) {
-      throw new CustomerNotFoundError(id);
-    }
-    return this.update(id, customer);
-  }
-}
-
-const buildCustomer = (id: number): Customer => {
+export const buildCustomer = (id: number): Customer => {
   return Customer.restore({
     id: CustomerId.from(id),
     name: "Jane Doe",

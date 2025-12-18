@@ -10,6 +10,7 @@ import { FindCustomerByIdUseCase } from "../../application/use-cases/find-custom
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
 import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
 import { UpdateCustomerUseCase } from "../../application/use-cases/update-customer.use-case";
+import { AddAvailableCreditCustomerUseCase } from "../../application/use-cases/add-available-credit-customer.use-case";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerOrmEntity])],
@@ -47,6 +48,12 @@ import { UpdateCustomerUseCase } from "../../application/use-cases/update-custom
       provide: UpdateCustomerUseCase,
       useFactory: (customerRepository: CustomerRepositoryPort) =>
         new UpdateCustomerUseCase(customerRepository),
+      inject: [CUSTOMER_REPOSITORY_TOKEN],
+    },
+    {
+      provide: AddAvailableCreditCustomerUseCase,
+      useFactory: (customerRepository: CustomerRepositoryPort) =>
+        new AddAvailableCreditCustomerUseCase(customerRepository),
       inject: [CUSTOMER_REPOSITORY_TOKEN],
     },
   ],

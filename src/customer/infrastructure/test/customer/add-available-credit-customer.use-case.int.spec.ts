@@ -1,13 +1,13 @@
 import { AppDataSource as TestDataSource } from "../../../../shared/persistence/data-source";
 import { CustomerRepositoryAdapter } from "../../persistence/customer.repository.adapter";
 import { CustomerOrmEntity } from "../../persistence/customer.orm-entity";
-import { DeleteCustomerUseCase } from "../../../application/use-cases/delete-customer.use-case";
+import { AddAvailableCreditCustomerUseCase } from "../../../application/use-cases/add-available-credit-customer.use-case";
 import { FindCustomerByIdUseCase } from "../../../application/use-cases/find-customer-by-id.use-case";
 import { CustomerFactory } from "../../../../../test/factories/customer.factory";
 
-describe("DeleteCustomerUseCase (integration)", () => {
+describe("AddAvailableCreditCustomerUseCase (integration)", () => {
   let repo: CustomerRepositoryAdapter;
-  let useCase: DeleteCustomerUseCase;
+  let useCase: AddAvailableCreditCustomerUseCase;
   let findCustomerByIdUseCase: FindCustomerByIdUseCase;
   let customerFactory: CustomerFactory;
 
@@ -17,21 +17,21 @@ describe("DeleteCustomerUseCase (integration)", () => {
     }
     const ormRepo = TestDataSource.getRepository(CustomerOrmEntity);
     repo = new CustomerRepositoryAdapter(ormRepo);
-    useCase = new DeleteCustomerUseCase(repo);
+    useCase = new AddAvailableCreditCustomerUseCase(repo);
     findCustomerByIdUseCase = new FindCustomerByIdUseCase(repo);
     customerFactory = new CustomerFactory(TestDataSource);
   });
 
-  it("deletes a customer when the id exists", async () => {
+  it("adds available credit to a customer when the id exists", async () => {
     const customer = await customerFactory.create();
 
-    await useCase.execute(customer.id);
+    await useCase.execute({ id: customer.id, amount: 100 });
 
     const found = await findCustomerByIdUseCase.execute(customer.id);
-    expect(found).toBeNull();
+    expect(found?.availableCredit).toBe(customer.availableCredit + 100);
   });
 
   it("throws an error when the customer does not exist", async () => {
-    await expect(useCase.execute(9999)).rejects.toThrow();
+    await expect(useCase.execute({ id: 9999, amount: 100 })).rejects.toThrow();
   });
 });

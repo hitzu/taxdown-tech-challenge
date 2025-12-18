@@ -1,5 +1,4 @@
 import { UpdateCustomerUseCase } from "../use-cases/update-customer.use-case";
-import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { Customer } from "../../domain/entities/customer.entity";
 import {
   AvailableCredit,
@@ -15,80 +14,7 @@ import {
   CustomerPhoneNumberInvalidError,
 } from "../../domain/errors";
 import { UpdateCustomerInputDto } from "../dto/update-customer.dto";
-
-class InMemoryCustomerRepository implements CustomerRepositoryPort {
-  private store: Customer[] = [];
-
-  public findByIdCalls = 0;
-  public updateCalls: Array<{ id: CustomerId; customer: Partial<Customer> }> =
-    [];
-
-  async save(customer: Customer): Promise<Customer> {
-    // In these tests we always pre-create Customers with an id via `Customer.restore`.
-    this.store.push(customer);
-    return customer;
-  }
-
-  async findById(id: CustomerId): Promise<Customer | null> {
-    this.findByIdCalls += 1;
-    return this.store.find((c) => c.id.getValue() === id.getValue()) ?? null;
-  }
-
-  async findAll(): Promise<{ customers: Customer[]; total: number }> {
-    return { customers: [...this.store], total: this.store.length };
-  }
-
-  async delete(id: CustomerId): Promise<void> {
-    this.store = this.store.filter((c) => c.id.getValue() !== id.getValue());
-  }
-
-  async findByEmailAndPhoneNumber(): Promise<Customer | null> {
-    return null;
-  }
-
-  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
-    this.updateCalls.push({ id, customer });
-
-    const existing = await this.findById(id);
-    if (!existing) {
-      throw new CustomerNotFoundError(id);
-    }
-
-    const nextName =
-      customer.name !== undefined ? String(customer.name).trim() : existing.name;
-
-    const nextEmail =
-      customer.email !== undefined
-        ? (customer.email as unknown as Email)
-        : existing.email;
-
-    const nextPhoneNumber =
-      customer.phoneNumber !== undefined
-        ? (customer.phoneNumber as unknown as PhoneNumber)
-        : existing.phoneNumber;
-
-    const nextAvailableCredit =
-      customer.availableCredit !== undefined
-        ? (customer.availableCredit as unknown as AvailableCredit)
-        : existing.availableCredit;
-
-    const updated = Customer.restore({
-      id: existing.id,
-      name: nextName,
-      email: nextEmail,
-      phoneNumber: nextPhoneNumber,
-      availableCredit: nextAvailableCredit,
-      createdAt: existing.createdAt,
-      updatedAt: new Date(),
-    });
-
-    this.store = this.store.map((c) =>
-      c.id.getValue() === id.getValue() ? updated : c
-    );
-
-    return updated;
-  }
-}
+import { InMemoryCustomerRepository } from "../../../../test/utils/in-memory-customer-repository";
 
 const buildUpdateInput = (
   overrides: Partial<UpdateCustomerInputDto> = {}
@@ -101,10 +27,6 @@ const buildUpdateInput = (
 });
 
 describe("UpdateCustomerUseCase", () => {
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   it("should update a customer with valid data", async () => {
     // Arrange
     const repo = new InMemoryCustomerRepository();
@@ -138,9 +60,13 @@ describe("UpdateCustomerUseCase", () => {
 
     const updateArg = repo.updateCalls[0]!.customer;
     expect(updateArg.email).toBeInstanceOf(Email);
-    expect((updateArg.email as Email).getValue()).toBe("john.updated@example.com");
+    expect((updateArg.email as Email).getValue()).toBe(
+      "john.updated@example.com"
+    );
     expect(updateArg.phoneNumber).toBeInstanceOf(PhoneNumber);
-    expect((updateArg.phoneNumber as PhoneNumber).getValue()).toBe("+34600999888");
+    expect((updateArg.phoneNumber as PhoneNumber).getValue()).toBe(
+      "+34600999888"
+    );
     expect(updateArg.availableCredit).toBeInstanceOf(AvailableCredit);
     expect((updateArg.availableCredit as AvailableCredit).getValue()).toBe(250);
 
@@ -200,9 +126,9 @@ describe("UpdateCustomerUseCase", () => {
     const useCase = new UpdateCustomerUseCase(repo);
 
     // Act + Assert
-    await expect(useCase.execute(999, buildUpdateInput())).rejects.toBeInstanceOf(
-      CustomerNotFoundError
-    );
+    await expect(
+      useCase.execute(999, buildUpdateInput())
+    ).rejects.toBeInstanceOf(CustomerNotFoundError);
     expect(repo.updateCalls).toHaveLength(0);
   });
 
@@ -215,7 +141,7 @@ describe("UpdateCustomerUseCase", () => {
     await expect(useCase.execute(0, buildUpdateInput())).rejects.toBeInstanceOf(
       CustomerIdPositiveError
     );
-    expect(repo.findByIdCalls).toBe(0);
+    expect(repo.findByIdCalls).toHaveLength(0);
     expect(repo.updateCalls).toHaveLength(0);
   });
 
@@ -255,9 +181,9 @@ describe("UpdateCustomerUseCase", () => {
       );
 
       // Act + Assert
-      await expect(useCase.execute(1, buildUpdateInput(overrides))).rejects.toBeInstanceOf(
-        error
-      );
+      await expect(
+        useCase.execute(1, buildUpdateInput(overrides))
+      ).rejects.toBeInstanceOf(error);
       expect(repo.updateCalls).toHaveLength(0);
     }
   );
@@ -286,5 +212,3 @@ describe("UpdateCustomerUseCase", () => {
     expect(repo.updateCalls).toHaveLength(1);
   });
 });
-
-

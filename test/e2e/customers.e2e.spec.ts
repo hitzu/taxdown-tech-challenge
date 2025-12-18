@@ -273,10 +273,6 @@ describe("Customers E2E", () => {
     });
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   it("PUT /api/customers/:id should update a customer", async () => {
     const created = await factory.create({
       name: "Update Me",
@@ -295,5 +291,49 @@ describe("Customers E2E", () => {
         availableCredit: 456,
       })
       .expect(204);
+  });
+
+  it("PATCH /api/customers/:id/available-credit should add to a customer's availableCredit", async () => {
+    const created = await factory.create({
+      name: "Credit Update Me",
+      email: "credit.update.me@example.com",
+      phoneNumber: "+34600118888",
+      availableCredit: 123,
+    });
+
+    const amountToAdd = 999;
+
+    const res = await request(app.getHttpServer())
+      .patch(`/api/customers/${created.id}/available-credit`)
+      .set("content-type", "application/json")
+      .send({ availableCredit: amountToAdd })
+      .expect(204);
+
+    // Controller returns void on success
+    expect(res.text).toBe("");
+    expect(res.body).toEqual({});
+
+    const repo = TestDataSource.getRepository(CustomerOrmEntity);
+    const persisted = await repo.findOne({ where: { id: created.id } });
+
+    expect(persisted).toBeTruthy();
+    expect(Number(persisted!.availableCredit)).toBe(123 + amountToAdd);
+  });
+
+  it("PATCH /api/customers/:id/available-credit should return 404 when customer does not exist", async () => {
+    const res = await request(app.getHttpServer())
+      .patch("/api/customers/99999999/available-credit")
+      .set("content-type", "application/json")
+      .send({ availableCredit: 100 })
+      .expect(404);
+
+    expect(res.body).toMatchObject({
+      code: "CUSTOMER_NOT_FOUND",
+      message: expect.any(String),
+    });
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

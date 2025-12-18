@@ -16,4 +16,5 @@ export interface CustomerRepositoryPort {
     phoneNumber: PhoneNumber
   ): Promise<Customer | null>;
   update(id: CustomerId, customer: Partial<Customer>): Promise<Customer>;
+  addAvailableCredit(id: CustomerId, amount: number): Promise<Customer>;
 }

@@ -127,4 +127,17 @@ export class CustomerRepositoryAdapter implements CustomerRepositoryPort {
     const saved = await this.repo.save(existing);
     return CustomerOrmEntity.toDomain(saved);
   }
+
+  async addAvailableCredit(id: CustomerId, amount: number): Promise<Customer> {
+    const existing = await this.repo.findOne({ where: { id: id.getValue() } });
+    if (!existing) {
+      throw new CustomerNotFoundError(id);
+    }
+
+    const current = Number(existing.availableCredit);
+    existing.availableCredit = current + amount;
+
+    const saved = await this.repo.save(existing);
+    return CustomerOrmEntity.toDomain(saved);
+  }
 }

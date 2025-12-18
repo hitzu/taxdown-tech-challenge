@@ -50,3 +50,14 @@ export class UpdateCustomerRequestDto {
   @Min(0)
   availableCredit?: number;
 }
+
+export class UpdateCustomerAvailableCreditRequestDto {
+  @ApiProperty({
+    description: "The available credit of the customer",
+    example: 100,
+    required: true,
+  })
+  @IsNumber()
+  @Min(0)
+  availableCredit!: number;
+}

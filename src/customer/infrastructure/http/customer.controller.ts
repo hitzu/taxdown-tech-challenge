@@ -12,6 +12,7 @@ import {
   Query,
   Delete,
   Put,
+  Patch,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -28,12 +29,14 @@ import { FindCustomerByIdUseCase } from "../../application/use-cases/find-custom
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
 import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
 import { UpdateCustomerUseCase } from "../../application/use-cases/update-customer.use-case";
+import { AddAvailableCreditCustomerUseCase } from "../../application/use-cases/add-available-credit-customer.use-case";
 
 import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
 import {
   CustomerDto,
   FindAllCustomerRequestDto,
   FindAllCustomerResponseDto,
+  UpdateCustomerAvailableCreditRequestDto,
   UpdateCustomerRequestDto,
 } from "./dto";
 import { CustomerNotFoundError as HttpCustomerNotFoundError } from "../errors";
@@ -56,7 +59,9 @@ export class CustomerController {
     @Inject(DeleteCustomerUseCase)
     private readonly deleteCustomerUseCase: DeleteCustomerUseCase,
     @Inject(UpdateCustomerUseCase)
-    private readonly updateCustomerUseCase: UpdateCustomerUseCase
+    private readonly updateCustomerUseCase: UpdateCustomerUseCase,
+    @Inject(AddAvailableCreditCustomerUseCase)
+    private readonly addAvailableCreditCustomerUseCase: AddAvailableCreditCustomerUseCase
   ) {}
 
   @Post()
@@ -157,6 +162,30 @@ export class CustomerController {
         Number(id),
         updateCustomerRequestDto
       );
+    } catch (error) {
+      if (error instanceof DomainCustomerNotFoundError) {
+        throw new NotFoundException({
+          message: error.message,
+          code: error.code,
+        });
+      }
+      throw error;
+    }
+  }
+
+  @Patch("/:id/available-credit")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: "id", description: "The id of the customer", example: "1" })
+  async updateCustomerAvailableCredit(
+    @Param("id") id: string,
+    @Body()
+    updateCustomerAvailableCreditRequestDto: UpdateCustomerAvailableCreditRequestDto
+  ) {
+    try {
+      await this.addAvailableCreditCustomerUseCase.execute({
+        id: Number(id),
+        amount: updateCustomerAvailableCreditRequestDto.availableCredit,
+      });
     } catch (error) {
       if (error instanceof DomainCustomerNotFoundError) {
         throw new NotFoundException({
