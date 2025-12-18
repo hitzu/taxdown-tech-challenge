@@ -17,6 +17,7 @@
     "db:run": "ts-node ./node_modules/typeorm/cli.js -d src/shared/persistence/data-source.ts migration:run",
     "db:revert": "ts-node ./node_modules/typeorm/cli.js -d src/shared/persistence/data-source.ts migration:revert",
     "db:status": "ts-node ./node_modules/typeorm/cli.js -d src/shared/persistence/data-source.ts migration:show",
+    "db:debug": "ts-node scripts/db-debug.ts",
     "db:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/shared/persistence/data-source.ts migration:generate src/shared/persistence/migrations/Migration",
     "prepare": "husky && husky install"
   },
