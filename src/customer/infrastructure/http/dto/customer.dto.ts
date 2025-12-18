@@ -54,7 +54,7 @@ export class CustomerDto {
   @IsNumber()
   @IsNotEmpty()
   @IsPositive()
-  initialAvailableCredit!: number;
+  availableCredit!: number;
 
   @ApiProperty({
     description: "The created at date of the customer",

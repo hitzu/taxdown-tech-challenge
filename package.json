@@ -11,7 +11,7 @@
     "deploy": "pnpm build && serverless deploy",
     "offline": "pnpm build && serverless offline start",
     "test": "jest --runInBand --testPathIgnorePatterns=e2e-spec.ts",
-    "test:e2e": "jest --runInBand --testMatch \"**/*.e2e-spec.[tj]s\"",
+    "test:e2e": "jest --runInBand --testRegex \".*\\\\.e2e\\\\.spec\\\\.ts$\"",
     "test:all": "jest --runInBand",
     "typeorm": "typeorm-ts-node-commonjs -d src/shared/persistence/data-source.ts",
     "db:run": "ts-node ./node_modules/typeorm/cli.js -d src/shared/persistence/data-source.ts migration:run",

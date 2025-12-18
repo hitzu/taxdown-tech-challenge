@@ -7,6 +7,7 @@ import { CUSTOMER_REPOSITORY_TOKEN } from "../persistence/customer-repository.to
 import { CreateCustomerUseCase } from "../../application/use-cases/create-customer.use-case";
 import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
+import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerOrmEntity])],
@@ -26,6 +27,12 @@ import { FindCustomerByIdUseCase } from "../../application/use-cases/find-custom
       provide: FindCustomerByIdUseCase,
       useFactory: (customerRepository: CustomerRepositoryPort) =>
         new FindCustomerByIdUseCase(customerRepository),
+      inject: [CUSTOMER_REPOSITORY_TOKEN],
+    },
+    {
+      provide: FindAllCustomerUseCase,
+      useFactory: (customerRepository: CustomerRepositoryPort) =>
+        new FindAllCustomerUseCase(customerRepository),
       inject: [CUSTOMER_REPOSITORY_TOKEN],
     },
   ],

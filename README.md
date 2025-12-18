@@ -255,7 +255,7 @@ We define the following use cases:
 - `name: string`
 - `email: string`
 - `phoneNumber: string`
-- (optional) `initialAvailableCredit: number` (default 0)
+- (optional) `availableCredit: number` (default 0)
 
 **Process:**
 

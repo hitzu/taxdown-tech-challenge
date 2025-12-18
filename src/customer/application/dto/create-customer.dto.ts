@@ -2,7 +2,7 @@ export interface CreateCustomerInputDto {
   name: string;
   email: string;
   phoneNumber: string;
-  initialAvailableCredit: number;
+  availableCredit: number;
 }
 
 export interface CreateCustomerOutputDto {

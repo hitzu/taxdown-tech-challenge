@@ -9,6 +9,7 @@ import {
   Param,
   NotFoundException,
   ConflictException,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -17,14 +18,22 @@ import {
   ApiOkResponse,
   ApiParam,
   ApiResponse,
+  ApiQuery,
 } from "@nestjs/swagger";
 
 import { CreateCustomerUseCase } from "../../application/use-cases/create-customer.use-case";
-import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
-import { CustomerDto } from "./dto";
+import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
+
+import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
+import {
+  CustomerDto,
+  FindAllCustomerRequestDto,
+  FindAllCustomerResponseDto,
+} from "./dto";
 import { CustomerNotFoundError } from "../errors";
 import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
+import { ParseFindAllCustomersQueryPipe } from "./pipes/parse-find-all-customers-query.pipe";
 
 @ApiTags("Customers")
 @Controller("customers")
@@ -33,7 +42,9 @@ export class CustomerController {
     @Inject(CreateCustomerUseCase)
     private readonly createCustomerUseCase: CreateCustomerUseCase,
     @Inject(FindCustomerByIdUseCase)
-    private readonly findByIdCustomerUseCase: FindCustomerByIdUseCase
+    private readonly findCustomerByIdUseCase: FindCustomerByIdUseCase,
+    @Inject(FindAllCustomerUseCase)
+    private readonly findAllCustomersUseCase: FindAllCustomerUseCase
   ) {}
 
   @Post()
@@ -66,7 +77,7 @@ export class CustomerController {
     type: CustomerDto,
   })
   async findCustomerById(@Param("id") id: string) {
-    const customerFound = await this.findByIdCustomerUseCase.execute(
+    const customerFound = await this.findCustomerByIdUseCase.execute(
       Number(id)
     );
 
@@ -76,5 +87,32 @@ export class CustomerController {
     }
 
     return customerFound;
+  }
+
+  @Get()
+  @ApiOkResponse({ description: "Customers found successfully" })
+  @ApiQuery({ type: FindAllCustomerRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: "Customers found successfully",
+    type: FindAllCustomerResponseDto,
+  })
+  async findAllCustomers(
+    @Query(new ParseFindAllCustomersQueryPipe())
+    query: FindAllCustomerRequestDto
+  ): Promise<FindAllCustomerResponseDto> {
+    const {
+      sortBy = "createdAt",
+      sortOrder = "asc",
+      page = 1,
+      pageSize = 10,
+    } = query;
+
+    return await this.findAllCustomersUseCase.execute({
+      sortBy,
+      sortOrder,
+      page,
+      pageSize,
+    });
   }
 }
