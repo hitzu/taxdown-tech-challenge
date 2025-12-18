@@ -4,8 +4,8 @@ import {
   IsNotEmpty,
   IsEmail,
   IsNumber,
-  Min,
   IsOptional,
+  IsPositive,
 } from "class-validator";
 
 export class UpdateCustomerRequestDto {
@@ -47,7 +47,7 @@ export class UpdateCustomerRequestDto {
   })
   @IsOptional()
   @IsNumber()
-  @Min(0)
+  @IsPositive()
   availableCredit?: number;
 }
 
@@ -58,6 +58,6 @@ export class UpdateCustomerAvailableCreditRequestDto {
     required: true,
   })
   @IsNumber()
-  @Min(0)
+  @IsPositive()
   availableCredit!: number;
 }

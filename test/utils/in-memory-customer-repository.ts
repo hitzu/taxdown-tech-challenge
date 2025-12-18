@@ -124,26 +124,6 @@ export class InMemoryCustomerRepository implements CustomerRepositoryPort {
     );
     return updated;
   }
-
-  async addAvailableCredit(id: CustomerId, amount: number): Promise<Customer> {
-    const existing = await this.findById(id);
-    if (!existing) throw new CustomerNotFoundError(id);
-
-    const updated = Customer.restore({
-      id: existing.id,
-      name: existing.name,
-      email: existing.email,
-      phoneNumber: existing.phoneNumber,
-      availableCredit: existing.availableCredit.add(amount),
-      createdAt: existing.createdAt,
-      updatedAt: existing.updatedAt,
-    });
-
-    this.store = this.store.map((c) =>
-      c.id.getValue() === id.getValue() ? updated : c
-    );
-    return updated;
-  }
 }
 
 export const buildCustomer = (id: number): Customer => {

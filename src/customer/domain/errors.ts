@@ -7,7 +7,8 @@ export type DomainErrorCode =
   | "CUSTOMER_PHONE_NUMBER_INVALID"
   | "CUSTOMER_AVAILABLE_CREDIT_NEGATIVE"
   | "CUSTOMER_ID_POSITIVE"
-  | "CUSTOMER_ALREADY_EXISTS_EMAIL_PHONE_NUMBER";
+  | "CUSTOMER_ALREADY_EXISTS_EMAIL_PHONE_NUMBER"
+  | "CUSTOMER_AVAILABLE_CREDIT_POSITIVE";
 
 export class DomainError extends Error {
   constructor(public readonly code: DomainErrorCode, message: string) {
@@ -66,6 +67,15 @@ export class CustomerAlreadyExistsEmailPhoneNumberError extends DomainError {
     super(
       "CUSTOMER_ALREADY_EXISTS_EMAIL_PHONE_NUMBER",
       `Customer with email ${email} and phone number ${phoneNumber} already exists`
+    );
+  }
+}
+
+export class CustomerAvailableCreditPositiveError extends DomainError {
+  constructor(availableCredit: number) {
+    super(
+      "CUSTOMER_AVAILABLE_CREDIT_POSITIVE",
+      `Available credit must be positive: ${availableCredit}`
     );
   }
 }

@@ -1,4 +1,8 @@
 import {
+  CustomerAvailableCreditPositiveError,
+  CustomerNameEmptyError,
+} from "../errors";
+import {
   AvailableCredit,
   CustomerId,
   Email,
@@ -40,7 +44,7 @@ export class Customer {
 
   private ensureValidName(name: string): void {
     if (name.trim() === "") {
-      throw new Error("Name cannot be empty");
+      throw new CustomerNameEmptyError();
     }
   }
 
@@ -58,9 +62,7 @@ export class Customer {
 
   increaseAvailableCredit(delta: AvailableCredit): void {
     if (delta.getValue() <= 0) {
-      throw new Error(
-        `IncreaseAvailableCredit delta must be positive. Received: ${delta.getValue()}`
-      );
+      throw new CustomerAvailableCreditPositiveError(delta.getValue());
     }
 
     this._availableCredit = this._availableCredit.add(delta.getValue());
