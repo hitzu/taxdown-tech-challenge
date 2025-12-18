@@ -6,6 +6,7 @@ import { CustomerOrmEntity } from "./customer.orm-entity";
 import { CustomerId, Email, PhoneNumber } from "../../domain/value-objects";
 import { Customer } from "../../domain/entities/customer.entity";
 import { FindAllCustomerInputDto } from "../../application/dto";
+import { CustomerNotFoundError } from "../../domain/errors";
 
 @Injectable()
 export class CustomerRepositoryAdapter implements CustomerRepositoryPort {
@@ -87,5 +88,43 @@ export class CustomerRepositoryAdapter implements CustomerRepositoryPort {
       customers: rows.map((row) => CustomerOrmEntity.toDomain(row)),
       total,
     };
+  }
+
+  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
+    const existing = await this.repo.findOne({ where: { id: id.getValue() } });
+    if (!existing) {
+      throw new CustomerNotFoundError(id);
+    }
+
+    // Only allow updating persistable fields; ignore domain methods / readonly metadata.
+    if (customer.name !== undefined) {
+      existing.name = String(customer.name).trim();
+    }
+
+    if (customer.email !== undefined) {
+      const raw = (customer as unknown as { email: Email | string }).email;
+      existing.email = typeof raw === "string" ? raw : raw.getValue();
+    }
+
+    if (customer.phoneNumber !== undefined) {
+      const raw = (customer as unknown as { phoneNumber: PhoneNumber | string })
+        .phoneNumber;
+      existing.phoneNumber = typeof raw === "string" ? raw : raw.getValue();
+    }
+
+    if (customer.availableCredit !== undefined) {
+      const raw = (customer as unknown as { availableCredit: unknown })
+        .availableCredit;
+      const next =
+        typeof raw === "number"
+          ? raw
+          : typeof (raw as any)?.getValue === "function"
+          ? Number((raw as any).getValue())
+          : Number(raw);
+      existing.availableCredit = next;
+    }
+
+    const saved = await this.repo.save(existing);
+    return CustomerOrmEntity.toDomain(saved);
   }
 }

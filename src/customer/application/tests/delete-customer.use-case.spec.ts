@@ -49,6 +49,14 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
   async findByEmailAndPhoneNumber(): Promise<Customer | null> {
     return null;
   }
+
+  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
+    const customerFound = await this.findById(id);
+    if (!customerFound) {
+      throw new CustomerNotFoundError(id);
+    }
+    return this.update(id, customer);
+  }
 }
 
 const buildCustomer = (id: number): Customer => {

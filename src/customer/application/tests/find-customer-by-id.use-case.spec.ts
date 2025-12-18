@@ -7,6 +7,7 @@ import {
   Email,
   PhoneNumber,
 } from "../../domain/value-objects";
+import { CustomerNotFoundError } from "../../domain/errors";
 
 class InMemoryCustomerRepository implements CustomerRepositoryPort {
   private store: Customer[] = [];
@@ -73,6 +74,14 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
           c.phoneNumber.getValue() === phoneNumber.getValue()
       ) ?? null
     );
+  }
+
+  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
+    const customerFound = await this.findById(id);
+    if (!customerFound) {
+      throw new CustomerNotFoundError(id);
+    }
+    return this.update(id, customer);
   }
 }
 

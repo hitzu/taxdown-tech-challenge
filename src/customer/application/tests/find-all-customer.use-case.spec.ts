@@ -8,6 +8,7 @@ import {
 } from "../../domain/value-objects";
 import { FindAllCustomerUseCase } from "../use-cases/find-all-customer.use-case";
 import { FindAllCustomerInputDto } from "../dto/find-all-customer.dto";
+import { CustomerNotFoundError } from "../../domain/errors";
 
 class InMemoryCustomerRepository implements CustomerRepositoryPort {
   private store: Customer[] = [];
@@ -86,6 +87,14 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
           c.phoneNumber.getValue() === phoneNumber.getValue()
       ) ?? null
     );
+  }
+
+  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
+    const customerFound = await this.findById(id);
+    if (!customerFound) {
+      throw new CustomerNotFoundError(id);
+    }
+    return this.update(id, customer);
   }
 }
 
@@ -174,6 +183,16 @@ describe("FindAllCustomerUseCase", () => {
       findAll: async () => {
         throw error;
       },
+      update: async () =>
+        Customer.restore({
+          id: CustomerId.from(1),
+          name: "Alice",
+          email: Email.from("alice@example.com"),
+          phoneNumber: PhoneNumber.from("+34600111111"),
+          availableCredit: AvailableCredit.from(10),
+          createdAt: new Date("2024-01-01T00:00:00.000Z"),
+          updatedAt: new Date("2024-01-01T00:00:00.000Z"),
+        }),
     };
     const useCase = new FindAllCustomerUseCase(repo);
 

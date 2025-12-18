@@ -11,6 +11,7 @@ import {
   ConflictException,
   Query,
   Delete,
+  Put,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -26,12 +27,14 @@ import { CreateCustomerUseCase } from "../../application/use-cases/create-custom
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
 import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
+import { UpdateCustomerUseCase } from "../../application/use-cases/update-customer.use-case";
 
 import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
 import {
   CustomerDto,
   FindAllCustomerRequestDto,
   FindAllCustomerResponseDto,
+  UpdateCustomerRequestDto,
 } from "./dto";
 import { CustomerNotFoundError as HttpCustomerNotFoundError } from "../errors";
 import {
@@ -51,7 +54,9 @@ export class CustomerController {
     @Inject(FindAllCustomerUseCase)
     private readonly findAllCustomersUseCase: FindAllCustomerUseCase,
     @Inject(DeleteCustomerUseCase)
-    private readonly deleteCustomerUseCase: DeleteCustomerUseCase
+    private readonly deleteCustomerUseCase: DeleteCustomerUseCase,
+    @Inject(UpdateCustomerUseCase)
+    private readonly updateCustomerUseCase: UpdateCustomerUseCase
   ) {}
 
   @Post()
@@ -129,6 +134,29 @@ export class CustomerController {
   async deleteCustomer(@Param("id") id: string) {
     try {
       await this.deleteCustomerUseCase.execute(Number(id));
+    } catch (error) {
+      if (error instanceof DomainCustomerNotFoundError) {
+        throw new NotFoundException({
+          message: error.message,
+          code: error.code,
+        });
+      }
+      throw error;
+    }
+  }
+
+  @Put("/:id")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiParam({ name: "id", description: "The id of the customer", example: "1" })
+  async updateCustomer(
+    @Param("id") id: string,
+    @Body() updateCustomerRequestDto: UpdateCustomerRequestDto
+  ) {
+    try {
+      await this.updateCustomerUseCase.execute(
+        Number(id),
+        updateCustomerRequestDto
+      );
     } catch (error) {
       if (error instanceof DomainCustomerNotFoundError) {
         throw new NotFoundException({

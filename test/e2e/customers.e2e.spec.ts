@@ -276,4 +276,24 @@ describe("Customers E2E", () => {
   afterAll(async () => {
     await app.close();
   });
+
+  it("PUT /api/customers/:id should update a customer", async () => {
+    const created = await factory.create({
+      name: "Update Me",
+      email: "update.me@example.com",
+      phoneNumber: "+34600119999",
+      availableCredit: 123,
+    });
+
+    await request(app.getHttpServer())
+      .put(`/api/customers/${created.id}`)
+      .set("content-type", "application/json")
+      .send({
+        name: "Updated Name",
+        email: "updated@example.com",
+        phoneNumber: "+34600119998",
+        availableCredit: 456,
+      })
+      .expect(204);
+  });
 });

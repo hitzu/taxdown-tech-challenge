@@ -2,7 +2,10 @@ import { CreateCustomerUseCase } from "../use-cases/create-customer.use-case";
 import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { Customer } from "../../domain/entities/customer.entity";
 import { CustomerId } from "../../domain/value-objects/customer-id.vo";
-import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
+import {
+  CustomerAlreadyExistsEmailPhoneNumberError,
+  CustomerNotFoundError,
+} from "../../domain/errors";
 import { Email, PhoneNumber } from "../../domain/value-objects";
 
 class InMemoryCustomerRepository implements CustomerRepositoryPort {
@@ -70,6 +73,14 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
 
   async delete(id: CustomerId): Promise<void> {
     this.store = this.store.filter((c) => c.id.getValue() !== id.getValue());
+  }
+
+  async update(id: CustomerId, customer: Partial<Customer>): Promise<Customer> {
+    const customerFound = await this.findById(id);
+    if (!customerFound) {
+      throw new CustomerNotFoundError(id);
+    }
+    return this.update(id, customer);
   }
 }
 

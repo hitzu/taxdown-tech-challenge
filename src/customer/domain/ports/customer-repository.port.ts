@@ -15,4 +15,5 @@ export interface CustomerRepositoryPort {
     email: Email,
     phoneNumber: PhoneNumber
   ): Promise<Customer | null>;
+  update(id: CustomerId, customer: Partial<Customer>): Promise<Customer>;
 }

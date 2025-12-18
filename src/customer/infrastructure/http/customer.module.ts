@@ -9,6 +9,7 @@ import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.p
 import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
 import { FindAllCustomerUseCase } from "../../application/use-cases/find-all-customer.use-case";
 import { DeleteCustomerUseCase } from "../../application/use-cases/delete-customer.use-case";
+import { UpdateCustomerUseCase } from "../../application/use-cases/update-customer.use-case";
 
 @Module({
   imports: [TypeOrmModule.forFeature([CustomerOrmEntity])],
@@ -40,6 +41,12 @@ import { DeleteCustomerUseCase } from "../../application/use-cases/delete-custom
       provide: DeleteCustomerUseCase,
       useFactory: (customerRepository: CustomerRepositoryPort) =>
         new DeleteCustomerUseCase(customerRepository),
+      inject: [CUSTOMER_REPOSITORY_TOKEN],
+    },
+    {
+      provide: UpdateCustomerUseCase,
+      useFactory: (customerRepository: CustomerRepositoryPort) =>
+        new UpdateCustomerUseCase(customerRepository),
       inject: [CUSTOMER_REPOSITORY_TOKEN],
     },
   ],
