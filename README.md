@@ -146,37 +146,53 @@ See **`TESTING.md`** for details (DB setup, Jest global setup/cleanup, CI vs loc
 GitHub Actions workflow: `.github/workflows/ci-cd.yml`  
 Actions UI: `https://github.com/hitzu/taxdown-tech-challenge/actions`
 
-- On **push/PR** to `main`/`master`, CI installs dependencies, runs `pnpm test`, and builds.
+- On **push** to `main` (or a manual **`workflow_dispatch`** run), CI installs dependencies, runs `pnpm test`, and builds.
 - **E2E tests are not run in CI** (no dedicated AWS test environment yet); they’re enforced locally via the **Husky pre-push** hook.
-- On **push** to `main`/`master`, CI also runs DB migrations and deploys the Lambda using Serverless.
+- On **push** to `main`, CI also runs DB migrations and deploys the Lambda using Serverless.
 
 ```mermaid
 flowchart TD
-  A[Push to main/master] --> CI
+  A[Push to main] --> T
+  B[Manual run: workflow_dispatch] --> T
 
-  subgraph CI[Job: build-and-test]
-    CI1[Checkout repository]
-    CI2[Setup pnpm]
-    CI3[Setup Node.js 22.21.0 + pnpm cache]
-    CI4[Install deps: pnpm install --frozen-lockfile]
-    CI5[Run tests: pnpm test NODE_ENV=test DB_URL/DB_SCHEMA from secrets]
-    CI6[Build: pnpm run build]
-    CI1 --> CI2 --> CI3 --> CI4 --> CI5 --> CI6
+  subgraph T[Job: test]
+    T0[Service: Postgres 17 container]
+    T1[Checkout repository]
+    T2[Setup pnpm 10.19.0]
+    T3[Setup Node.js 22 + pnpm cache]
+    T4[Install deps: pnpm install --frozen-lockfile]
+    T5[Build: pnpm run build]
+    T6[Tests: pnpm run test NODE_ENV=test, DB_URL/DB_SCHEMA from job env]
+    T0 --> T1 --> T2 --> T3 --> T4 --> T5 --> T6
   end
 
-  CI --> CD
+  T --> M
 
-  subgraph CD[Job: deploy]
+  subgraph M[Job: migrate]
+    M1[Checkout repository]
+    M2[Setup pnpm 10.19.0]
+    M3[Setup Node.js 22 + pnpm cache]
+    M4[Install deps: pnpm install --frozen-lockfile]
+    M5[Build: pnpm run build]
+    M6[Debug DB_URL/DB_SCHEMA secrets/vars]
+    M7[db:debug check schema/search_path]
+    M8[migrations:status before: pnpm run db:status]
+    M9[migrations:run: pnpm run db:run]
+    M10[migrations:status after: pnpm run db:status]
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7 --> M8 --> M9 --> M10
+  end
+
+  M --> D
+
+  subgraph D[Job: deploy ]
     D1[Checkout repository]
-    D2[Setup pnpm]
-    D3[Setup Node.js 22.21.0 + pnpm cache]
+    D2[Setup pnpm 10.19.0]
+    D3[Setup Node.js 22 + pnpm cache]
     D4[Install deps: pnpm install --frozen-lockfile]
-    D5[migrations:status before pnpm run db:status NODE_ENV=production DB_URL/DB_SCHEMA from secrets]
-    D6[migrations:run pnpm run db:run]
-    D7[migrations:status after pnpm run db:status]
-    D8[Configure AWS credentials AWS_* from secrets]
-    D9[Deploy: pnpm exec serverless deploy NODE_ENV=production DB_URL/DB_SCHEMA from secrets]
-    D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> D7 --> D8 --> D9
+    D5[Build: pnpm run build]
+    D6[Configure AWS credentials secrets]
+    D7[Deploy: pnpm exec serverless deploy NODE_ENV=production]
+    D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> D7
   end
 ```
 
