@@ -18,7 +18,7 @@ export class CustomerFactory extends Factory<CustomerOrmEntity> {
     return {
       name: faker.person.fullName(),
       email: faker.internet.email(),
-      phoneNumber: faker.phone.number({ style: "national" }),
+      phoneNumber: faker.phone.number({ style: "international" }) as string,
       availableCredit: faker.number.int({ min: 0, max: 1000 }),
     };
   }

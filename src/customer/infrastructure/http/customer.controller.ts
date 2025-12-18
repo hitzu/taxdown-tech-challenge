@@ -1,26 +1,80 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Inject } from "@nestjs/common";
-import { ApiTags, ApiCreatedResponse } from "@nestjs/swagger";
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  Get,
+  Param,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiCreatedResponse,
+  ApiBody,
+  ApiOkResponse,
+  ApiParam,
+  ApiResponse,
+} from "@nestjs/swagger";
 
 import { CreateCustomerUseCase } from "../../application/use-cases/create-customer.use-case";
 import { CreateCustomerRequestDto } from "./dto/create-customer.request.dto";
+import { FindCustomerByIdUseCase } from "../../application/use-cases/find-customer-by-id.use-case";
+import { CustomerDto } from "./dto";
+import { CustomerNotFoundError } from "../errors";
+import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
 
 @ApiTags("Customers")
 @Controller("customers")
 export class CustomerController {
-  // NOTE: This @Inject is important for Lambda builds bundled with esbuild (serverless-esbuild).
-  // esbuild does not emit TS `design:paramtypes` metadata, so type-based DI can silently become undefined.
   constructor(
     @Inject(CreateCustomerUseCase)
-    private readonly createCustomerUseCase: CreateCustomerUseCase
+    private readonly createCustomerUseCase: CreateCustomerUseCase,
+    @Inject(FindCustomerByIdUseCase)
+    private readonly findByIdCustomerUseCase: FindCustomerByIdUseCase
   ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiCreatedResponse({ description: "Customer created successfully" })
+  @ApiBody({ type: CreateCustomerRequestDto })
   async createCustomer(
     @Body() createCustomerRequestDto: CreateCustomerRequestDto
   ) {
-    await this.createCustomerUseCase.execute(createCustomerRequestDto);
+    try {
+      await this.createCustomerUseCase.execute(createCustomerRequestDto);
+    } catch (error) {
+      if (error instanceof CustomerAlreadyExistsEmailPhoneNumberError) {
+        throw new ConflictException({
+          message: error.message,
+          code: error.code,
+        });
+      }
+      throw error;
+    }
     return;
+  }
+
+  @Get("/:id")
+  @ApiOkResponse({ description: "Customer found successfully" })
+  @ApiParam({ name: "id", description: "The id of the customer", example: "1" })
+  @ApiResponse({
+    status: 200,
+    description: "Customer found successfully",
+    type: CustomerDto,
+  })
+  async findCustomerById(@Param("id") id: string) {
+    const customerFound = await this.findByIdCustomerUseCase.execute(
+      Number(id)
+    );
+
+    if (!customerFound) {
+      const error = new CustomerNotFoundError(Number(id));
+      throw new NotFoundException({ message: error.message, code: error.code });
+    }
+
+    return customerFound;
   }
 }

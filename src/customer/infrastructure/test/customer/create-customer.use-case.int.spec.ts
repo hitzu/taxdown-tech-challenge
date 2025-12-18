@@ -34,4 +34,26 @@ describe("CustomerRepositoryAdapter (integration)", () => {
     expect(found!.name).toBe("John Doe");
     expect(found!.availableCredit.getValue()).toBe(100);
   });
+
+  it("fails when customer with same email and phone already exists", async () => {
+    const customer = Customer.createNew({
+      name: "John Doe",
+      email: Email.from("john+1@example.com"),
+      phoneNumber: PhoneNumber.from("+34600123457"),
+      initialCredit: AvailableCredit.from(100),
+    });
+
+    await repo.save(customer);
+
+    const duplicate = Customer.createNew({
+      name: "Jane Doe",
+      email: Email.from("john+1@example.com"),
+      phoneNumber: PhoneNumber.from("+34600123457"),
+      initialCredit: AvailableCredit.from(100),
+    });
+
+    await expect(repo.save(duplicate)).rejects.toMatchObject({
+      message: expect.stringContaining("idx_unique_email_phone_number"),
+    });
+  });
 });

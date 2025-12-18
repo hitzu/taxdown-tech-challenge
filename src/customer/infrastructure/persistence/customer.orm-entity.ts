@@ -1,4 +1,4 @@
-import { Entity, Column } from "typeorm";
+import { Entity, Column, Index } from "typeorm";
 import { BaseOrmEntity } from "../../../shared/persistence/base.orm-entity";
 import { Customer } from "../../domain/entities/customer.entity";
 import {
@@ -9,6 +9,9 @@ import {
 } from "../../domain/value-objects";
 import { DB_SCHEMA } from "../../../shared/persistence/db-config";
 
+@Index("idx_unique_email_phone_number", ["email", "phoneNumber"], {
+  unique: true,
+})
 @Entity({
   name: "customers",
   schema: DB_SCHEMA,
@@ -59,7 +62,6 @@ export class CustomerOrmEntity extends BaseOrmEntity {
 
   static fromDomain(customer: Customer): CustomerOrmEntity {
     const orm = new CustomerOrmEntity();
-    // id puede venir undefined si es un Customer recién creado
     const id = customer.id?.getValue?.();
     if (id) {
       orm.id = id;

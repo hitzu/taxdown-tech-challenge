@@ -6,6 +6,7 @@ import {
 } from "../../domain/value-objects";
 import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { CreateCustomerInputDto, CreateCustomerOutputDto } from "../dto";
+import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
 
 export class CreateCustomerUseCase {
   constructor(private readonly customerRepository: CustomerRepositoryPort) {}
@@ -18,6 +19,17 @@ export class CreateCustomerUseCase {
     const availableCredit = AvailableCredit.from(
       input.initialAvailableCredit ?? 0
     );
+
+    const existing = await this.customerRepository.findByEmailAndPhoneNumber(
+      email,
+      phoneNumber
+    );
+    if (existing) {
+      throw new CustomerAlreadyExistsEmailPhoneNumberError(
+        email.getValue(),
+        phoneNumber.getValue()
+      );
+    }
 
     const customer = Customer.createNew({
       name: input.name,

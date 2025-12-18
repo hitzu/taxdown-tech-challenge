@@ -2,6 +2,8 @@ import { CreateCustomerUseCase } from "../use-cases/create-customer.use-case";
 import { CustomerRepositoryPort } from "../../domain/ports/customer-repository.port";
 import { Customer } from "../../domain/entities/customer.entity";
 import { CustomerId } from "../../domain/value-objects/customer-id.vo";
+import { CustomerAlreadyExistsEmailPhoneNumberError } from "../../domain/errors";
+import { Email, PhoneNumber } from "../../domain/value-objects";
 
 class InMemoryCustomerRepository implements CustomerRepositoryPort {
   private store: Customer[] = [];
@@ -14,6 +16,19 @@ class InMemoryCustomerRepository implements CustomerRepositoryPort {
   async findAll(): Promise<Customer[]> {
     return [...this.store].sort(
       (a, b) => b.availableCredit.getValue() - a.availableCredit.getValue()
+    );
+  }
+
+  async findByEmailAndPhoneNumber(
+    email: Email,
+    phoneNumber: PhoneNumber
+  ): Promise<Customer | null> {
+    return (
+      this.store.find(
+        (c) =>
+          c.email.getValue() === email.getValue() &&
+          c.phoneNumber.getValue() === phoneNumber.getValue()
+      ) ?? null
     );
   }
 
@@ -76,5 +91,26 @@ describe("CreateCustomerUseCase", () => {
         initialAvailableCredit: 0,
       })
     ).rejects.toThrow();
+  });
+
+  it("should fail when customer with same email and phone already exists", async () => {
+    const repo = new InMemoryCustomerRepository();
+    const useCase = new CreateCustomerUseCase(repo);
+
+    await useCase.execute({
+      name: "Jane Doe",
+      email: "jane@example.com",
+      phoneNumber: "+34600111111",
+      initialAvailableCredit: 25,
+    });
+
+    await expect(
+      useCase.execute({
+        name: "Duplicate Jane",
+        email: "jane@example.com",
+        phoneNumber: "+34600111111",
+        initialAvailableCredit: 10,
+      })
+    ).rejects.toBeInstanceOf(CustomerAlreadyExistsEmailPhoneNumberError);
   });
 });

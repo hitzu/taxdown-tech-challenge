@@ -31,8 +31,6 @@ describe("Customers E2E", () => {
   it("POST /api/customers should create a customer", async () => {
     const generated = await factory.make();
 
-    // Phone number must satisfy domain E.164 regex: /^\+?[1-9]\d{1,14}$/
-    // Factory uses faker national format in some setups, so we override to a known-valid value.
     const payload = {
       name: generated.name,
       email: generated.email,
@@ -67,6 +65,43 @@ describe("Customers E2E", () => {
     expect(persisted!.createdAt).toBeInstanceOf(Date);
     expect(persisted!.updatedAt).toBeInstanceOf(Date);
     expect(persisted!.deletedAt).toBeNull();
+  });
+
+  it("POST /api/customers should fail when customer with same email and phone already exists", async () => {
+    const generated = await factory.make();
+
+    const payload = {
+      name: generated.name,
+      email: generated.email,
+      phoneNumber: "+512221101495",
+      initialAvailableCredit: Math.max(
+        1,
+        Number(generated.availableCredit) || 1
+      ),
+    };
+
+    await request(app.getHttpServer())
+      .post("/api/customers")
+      .set("content-type", "application/json")
+      .send(payload)
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post("/api/customers")
+      .set("content-type", "application/json")
+      .send({
+        ...payload,
+        name: "Duplicate Jane",
+      })
+      .expect(409);
+  });
+
+  it("GET /api/customers/:id should return a customer", async () => {
+    const generated = await factory.create();
+
+    await request(app.getHttpServer())
+      .get(`/api/customers/${generated.id}`)
+      .expect(200);
   });
 
   afterAll(async () => {
